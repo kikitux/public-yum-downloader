@@ -7,6 +7,7 @@
 #
 # Author: Alvaro Miranda
 # Email	: kikitux@gmail.com
+# Web	: http://zerodowntime.blogspot.co.nz
 # 
 # Based on the lxc-oracle template script from Oracle
 # from Wim Coekaerts and Dwight Engen
