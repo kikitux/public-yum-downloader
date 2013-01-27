@@ -145,25 +145,43 @@ repo_create()
         	echo "Downloading source rpm"
         fi
         
-		echo downlading $basearch
-		yumdownloader_cmd="yumdownloader --disablerepo=* --enablerepo=$repo --resolve --installroot=/var/tmp --archlist=$basearch -c $container_rootfs/$repofile --destdir=$container_rootfs/$basepath"
+		echo generating list for $basearch
+		yumdownloader_cmd="yumdownloader --url --disablerepo=* --enablerepo=$repo --resolve --installroot=/var/tmp --archlist=$basearch -c $container_rootfs/$repofile --destdir=$container_rootfs/$basepath"
+ 
+ 	#yumdownloader get some ERROR 416 and fail to download, so we will generate a list
+ 	#and will use wget to handle the download
+ 	downloadlist="/var/tmp/public-yum-downloader/list"
  
         if [ "$min" = "y" ]; then
 			echo "Will download the minimun packages for LXC host"
 			pkgs="yum initscripts passwd rsyslog vim-minimal openssh-server dhclient chkconfig rootfiles policycoreutils oraclelinux-release"
-			$yumdownloader_cmd $pkgs
+			$yumdownloader_cmd $pkgs > $downloadlist.log
 		else
-			$yumdownloader_cmd '*'
+			$yumdownloader_cmd '*' > $downloadlist.log
 		fi
 		
         if [ $? -ne 0 ]; then
-            die "Failed to download and install the rootfs, aborting."
+            die "Failed to download, aborting."
         fi
-        
-		#run createrepo
-		repodatacache="$container_rootfs/$basepath/repodata/.cache"
-		mkdir -p "$repodatacache"
-		createrepo --update --cache "$repodatacache" "$container_rootfs/$basepath"
+
+	awk '/http:/' $downloadlist.log > $downloadlist
+
+	echo "wget will process $(wc -l < $downloadlist) files"
+
+	wget -cN -P "$container_rootfs/$basepath" -i $downloadlist -o $downloadlist.log
+	if [ $? -ne 0 ]; then
+            die "Failed to download, aborting."
+        fi
+	
+	already_files=$(grep 'The file is already fully retrieved' $downloadlist.log | wc -l)
+	downloaded_files=$(grep 'Downloaded' $downloadlist.log | wc -l)
+
+	echo "wget downloaded $downloaded_files file(s) and found $already_files file(s) were already on the system"
+
+	#run createrepo
+	repodatacache="$container_rootfs/$basepath/repodata/.cache"
+	mkdir -p "$repodatacache"
+	echo createrepo --update --cache "$repodatacache" "$container_rootfs/$basepath"
 
     ) 200>/var/tmp/public-yum-downloader/lock
 }
@@ -273,7 +291,7 @@ fi
 
 if [ "$proxy" ]; then
 	echo "Using proxy $proxy"
-	export http_proxy=$proxy https_proxy=$proxy
+	export http_proxy=$proxy https_proxy=$proxy proxy=$proxy
 else
 	echo "No proxy specified"
 fi
