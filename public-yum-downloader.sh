@@ -1,9 +1,5 @@
 #!/bin/bash
-<<<<<<< HEAD
-# 201301280120
-=======
 # 201301281015
->>>>>>> createrepo
 # public-yum-downloader.sh
 #
 # public-yum-downloader script, to download a yum repository
