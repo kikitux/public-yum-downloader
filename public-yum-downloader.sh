@@ -181,7 +181,7 @@ repo_create()
 	#run createrepo
 	repodatacache="$container_rootfs/$basepath/repodata/.cache"
 	mkdir -p "$repodatacache"
-	echo createrepo --update --cache "$repodatacache" "$container_rootfs/$basepath"
+	createrepo --update --cache "$repodatacache" "$container_rootfs/$basepath"
 
     ) 200>/var/tmp/public-yum-downloader/lock
 }
