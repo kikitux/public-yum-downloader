@@ -1,9 +1,12 @@
 #!/bin/bash
-# 201301281230
+# 201301280120
 # public-yum-downloader.sh
 #
 # public-yum-downloader script, to download a yum repository
 # from public-yum.oracle.com
+#
+# Check updates on github
+# https://github.com/kikitux/public-yum-downloader
 #
 # Author: Alvaro Miranda
 # Email	: kikitux@gmail.com
