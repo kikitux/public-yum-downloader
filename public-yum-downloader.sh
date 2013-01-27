@@ -172,14 +172,15 @@ usage()
 {
 cat <<EOF
 -h|--help
--a|--arch=<arch>		architecture (ie. i386 or x86_64)
+-a|--arch=<arch>	architecture (ie. i386 or x86_64)
 -R|--release=<release>	release to download for the new container
--P|--path=<path>)		destination path of download (ie. /var/www/html)
--p|--proxy=<url>)		proxy (ie http://proxy:3128)
--r|--repo=<repo>)		manual repo download (ie. ol6_playground)
--m|--min				minimal package download for LXC host
--u|--url=<url>			local yum repo url (ie. local yum mirror)
--s|--src				download source rpm
+-P|--path=<path>)	destination path of download (ie. /var/www/html)
+-p|--proxy=<url>)	proxy (ie http://proxy:3128)
+-r|--repo=<repo>)	manual repo download (ie. ol6_playground)
+-m|--min		minimal package download for LXC host
+-u|--url=<url>		local yum repo url (ie. local yum mirror)
+-s|--src		download source rpm
+
 Release is of the format "major.minor", for example "5.8", "6.3", or "6.latest"
 EOF
     return 0
