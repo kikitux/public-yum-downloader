@@ -163,14 +163,14 @@ usage()
 {
     cat <<EOF
   -h|--help
-  -a|--arch=<arch>			architecture (ie. i386 or x86_64)
+  -a|--arch=<arch>		architecture (ie. i386 or x86_64)
   -R|--release=<release>	release to download for the new container
-  -P|--path=<path>)			destination path of download (ie. /var/www/html)
-  -p|--proxy=<url>)			proxy (ie http://proxy:3128)
-  -r|--repo=<repo>)			manual repo download (ie. ol6_playground)
-  -m|--min					minimal package download for LXC host
-  -u|--url=<url>			local yum repo url (ie. local yum mirror)
-  -s|--src					to download source rpm
+  -P|--path=<path>)		destination path of download (ie. /var/www/html)
+  -p|--proxy=<url>)		proxy (ie http://proxy:3128)
+  -r|--repo=<repo>)		manual repo download (ie. ol6_playground)
+  -m|--min			minimal package download for LXC host
+  -u|--url=<url>		local yum repo url (ie. local yum mirror)
+  -s|--src			to download source rpm
 Release is of the format "major.minor", for example "5.8", "6.3", or "6.latest"
 EOF
     return 0
@@ -188,15 +188,15 @@ do
     case "$1" in
         -h|--help)		usage $0 && exit 0;;
         -a|--arch)		arch=$2; shift 2;;
-        -R|--release)	container_release_version=$2; shift 2;;
+        -R|--release)		container_release_version=$2; shift 2;;
         -P|--path)		container_rootfs=$2; shift 2;;
-		-p|--proxy)		proxy=$2; shift 2;;
-		-r|--repo)	    manualrepo=$2; shift 2;;
-		-m|--min)		min=y; shift 1 ;;
+	-p|--proxy)		proxy=$2; shift 2;;
+	-r|--repo)	    	manualrepo=$2; shift 2;;
+	-m|--min)		min=y; shift 1 ;;
         -u|--url)		repourl=$2; shift 2;;
         -s|--src)		src=y; shift 1;;
-        --)             shift 1; break ;;
-        *)              break ;;
+        --)             	shift 1; break ;;
+        *)              	break ;;
     esac
 done
 
