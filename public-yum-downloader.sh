@@ -160,8 +160,8 @@ repo_create()
             die "Failed to download and install the rootfs, aborting."
         fi
         
-        #run createrepo
-        repodatacache="$container_rootfs/$basepath/repodata/.cache"
+		#run createrepo
+		repodatacache="$container_rootfs/$basepath/repodata/.cache"
 		mkdir -p "$repodatacache"
 		createrepo --update --cache "$repodatacache" "$container_rootfs/$basepath"
 
@@ -204,8 +204,8 @@ do
 		-m|--min)		min=y; shift 1 ;;
 		-u|--url)		repourl=$2; shift 2;;
 		-s|--src)		src=y; shift 1;;
-		--)				shift 1; break ;;
-		*)				break ;;
+		--)			shift 1; break ;;
+		*)			break ;;
 	esac
 done
 
