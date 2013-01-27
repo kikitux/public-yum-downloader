@@ -1,5 +1,9 @@
 #!/bin/bash
+<<<<<<< HEAD
 # 201301280120
+=======
+# 201301281015
+>>>>>>> createrepo
 # public-yum-downloader.sh
 #
 # public-yum-downloader script, to download a yum repository
@@ -38,7 +42,7 @@ die()
 }
 
 
-container_rootfs_create()
+repo_create()
 {
     cmds="rpm wget yum yumdownloader createrepo"
 
@@ -159,22 +163,27 @@ container_rootfs_create()
         if [ $? -ne 0 ]; then
             die "Failed to download and install the rootfs, aborting."
         fi
+        
+        #run createrepo
+        repodatacache="$container_rootfs/$basepath/repodata/.cache"
+		mkdir -p "$repodatacache"
+		createrepo --update --cache "$repodatacache" "$container_rootfs/$basepath"
 
     ) 200>/var/tmp/public-yum-downloader/lock
 }
 
 usage()
 {
-    cat <<EOF
-  -h|--help
-  -a|--arch=<arch>		architecture (ie. i386 or x86_64)
-  -R|--release=<release>	release to download for the new container
-  -P|--path=<path>)		destination path of download (ie. /var/www/html)
-  -p|--proxy=<url>)		proxy (ie http://proxy:3128)
-  -r|--repo=<repo>)		manual repo download (ie. ol6_playground)
-  -m|--min			minimal package download for LXC host
-  -u|--url=<url>		local yum repo url (ie. local yum mirror)
-  -s|--src			to download source rpm
+cat <<EOF
+-h|--help
+-a|--arch=<arch>		architecture (ie. i386 or x86_64)
+-R|--release=<release>	release to download for the new container
+-P|--path=<path>)		destination path of download (ie. /var/www/html)
+-p|--proxy=<url>)		proxy (ie http://proxy:3128)
+-r|--repo=<repo>)		manual repo download (ie. ol6_playground)
+-m|--min				minimal package download for LXC host
+-u|--url=<url>			local yum repo url (ie. local yum mirror)
+-s|--src				download source rpm
 Release is of the format "major.minor", for example "5.8", "6.3", or "6.latest"
 EOF
     return 0
@@ -190,18 +199,18 @@ eval set -- "$options"
 while true
 do
     case "$1" in
-        -h|--help)		usage $0 && exit 0;;
-        -a|--arch)		arch=$2; shift 2;;
-        -R|--release)		container_release_version=$2; shift 2;;
-        -P|--path)		container_rootfs=$2; shift 2;;
-	-p|--proxy)		proxy=$2; shift 2;;
-	-r|--repo)	    	manualrepo=$2; shift 2;;
-	-m|--min)		min=y; shift 1 ;;
-        -u|--url)		repourl=$2; shift 2;;
-        -s|--src)		src=y; shift 1;;
-        --)             	shift 1; break ;;
-        *)              	break ;;
-    esac
+		-h|--help)		usage $0 && exit 0;;
+		-a|--arch)		arch=$2; shift 2;;
+		-R|--release)		container_release_version=$2; shift 2;;
+		-P|--path)		container_rootfs=$2; shift 2;;
+		-p|--proxy)		proxy=$2; shift 2;;
+		-r|--repo)		manualrepo=$2; shift 2;;
+		-m|--min)		min=y; shift 1 ;;
+		-u|--url)		repourl=$2; shift 2;;
+		-s|--src)		src=y; shift 1;;
+		--)				shift 1; break ;;
+		*)				break ;;
+	esac
 done
 
 # make sure mandatory args are given and valid
@@ -278,8 +287,6 @@ if [ $? -ne 0 ]; then
     exit 1
 fi
 
-
-
 trap cleanup SIGHUP SIGINT SIGTERM
 
-container_rootfs_create
+repo_create
