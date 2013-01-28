@@ -1,5 +1,5 @@
 #!/bin/bash
-# 201301281015
+# 201301281950
 # public-yum-downloader.sh
 #
 # public-yum-downloader script, to download a yum repository
@@ -80,14 +80,18 @@ repo_create()
         else
             die "Unsupported release $container_release_major"
         fi
-        wget -q $public_url/$repofile -O $container_rootfs/$repofile
-        if [ ! -f $container_rootfs/$localrepofile ];then
-			wget -q $public_url/$repofile -O $container_rootfs/$localrepofile
-		fi
+        
+        wget -N -q $public_url/$repofile -O $container_rootfs/$repofile
+        
+        if [ -f $container_rootfs/$localrepofile ];then
+        	/bin/mv $container_rootfs/$localrepofile $container_rootfs/$localrepofile.old
+        fi
+	wget -N -q $public_url/$repofile -O $container_rootfs/$localrepofile
+	
         if [ $? -ne 0 ]; then
             die "Failed to download repo file $public_url/$repofile"
         fi
-        wget -q $public_url/$gpgkeyfile -O $container_rootfs/$gpgkeyfile
+        wget -N -q $public_url/$gpgkeyfile -O $container_rootfs/$gpgkeyfile
         if [ $? -ne 0 ]; then
             die "Failed to download gpg-key file $public_url/$gpgkeyfile"
         fi
@@ -125,6 +129,16 @@ repo_create()
             repo="ol"$container_release_major"_u"$container_release_minor"_base"
         fi
         
+        #disable all repo
+        sed -i "s|enabled=1|enabled=0|" $container_rootfs/$localrepofile
+        #enable the previous repo that were enabled
+	if [ -f $container_rootfs/$localrepofile.old ];then
+	        for enable_repo in $(tac $container_rootfs/$localrepofile.old| sed -n "/enabled=1/,/\]/ s/\]//p" | tr -d '[]');do
+	        	echo $enable_repo
+			sed -i "/\[$enable_repo\]/,/\[/ s/enabled=0/enabled=1/" $container_rootfs/$localrepofile
+		done
+        fi
+
         echo Repo to download is $repo
 		#Will enable the repo we are downloading
         sed -i "/\[$repo\]/,/\[/ s/enabled=0/enabled=1/" $container_rootfs/$localrepofile
@@ -137,7 +151,7 @@ repo_create()
         
 
         # 
-		basepath=$(sed -n -e "s/\$basearch/$basearch/" -e "/\[$repo\]/,/\[/ s/baseurl=http:\/\/public-yum.oracle.com//p" $container_rootfs/$repofile)
+	basepath=$(sed -n -e "s/\$basearch/$basearch/" -e "/\[$repo\]/,/\[/ s/baseurl=http:\/\/public-yum.oracle.com//p" $container_rootfs/$repofile)
         mkdir -p $container_rootfs/$basepath
         
         if [ "$src" = "y" ];then
@@ -167,13 +181,15 @@ repo_create()
 	awk '/http:/' $downloadlist.log > $downloadlist
 
 	echo "wget will process $(wc -l < $downloadlist) files"
+	
+	echo "to monitor the progress, you can do: tail -f /var/tmp/public-yum-downloader/list.log"
 
-	wget -cN -P "$container_rootfs/$basepath" -i $downloadlist -o $downloadlist.log
+	wget -nc -P "$container_rootfs/$basepath" -i $downloadlist -o $downloadlist.log
 	if [ $? -ne 0 ]; then
             die "Failed to download, aborting."
         fi
 	
-	already_files=$(grep 'The file is already fully retrieved' $downloadlist.log | wc -l)
+	already_files=$(grep 'already there' $downloadlist.log | wc -l)
 	downloaded_files=$(grep 'Downloaded' $downloadlist.log | wc -l)
 
 	echo "wget downloaded $downloaded_files file(s) and found $already_files file(s) were already on the system"
@@ -259,29 +275,6 @@ else
 fi
 container_release_major=`echo $container_release_version |awk -F '.' '{print $1}'`
 container_release_minor=`echo $container_release_version |awk -F '.' '{print $2}'`
-
-if which lsb_release >/dev/null 2>&1; then
-    host_distribution=`lsb_release --id |awk '{print $3}'`
-    host_release_version=`lsb_release --release |awk '{print $2}'`
-    host_release_major=`echo $host_release_version |awk -F '.' '{print $1}'`
-    host_release_minor=`echo $host_release_version |awk -F '.' '{print $2}'`
-else
-    if   [ -f /etc/fedora-release ]; then
-       host_distribution="Fedora"
-       host_release_version=`cat /etc/fedora-release |awk '{print $3}'`
-       host_release_major=$host_release_version
-       host_release_minor=0
-    elif [ -f /etc/oracle-release ]; then
-       host_distribution="OracleServer"
-       host_release_version=`cat /etc/oracle-release |awk '{print $5}'`
-       host_release_major=`echo $host_release_version |awk -F '.' '{print $1}'`
-       host_release_minor=`echo $host_release_version |awk -F '.' '{print $2}'`
-    else
-       echo "Unable to determine host distribution, ensure lsb_release is installed"
-       exit 1
-    fi
-fi
-echo "Host is $host_distribution $host_release_version"
 
 if [ -z "$container_rootfs" ]; then
 	echo "No path specified with -P"
