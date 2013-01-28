@@ -1,5 +1,5 @@
 #!/bin/bash
-# 201301281950
+# 201301282300
 # public-yum-downloader.sh
 #
 # public-yum-downloader script, to download a yum repository
@@ -9,8 +9,8 @@
 # https://github.com/kikitux/public-yum-downloader
 #
 # Author: Alvaro Miranda
-# Email	: kikitux@gmail.com
-# Web	: http://zerodowntime.blogspot.co.nz
+# Email    : kikitux@gmail.com
+# Web    : http://zerodowntime.blogspot.co.nz
 # 
 # Based on the lxc-oracle template script from Oracle
 # from Wim Coekaerts and Dwight Engen
@@ -56,38 +56,46 @@ repo_create()
             die "public-yum-downloader already running."
         fi
 
+        tmpdir="/var/tmp/public-yum-downloader"
+
         echo "Downloading release $container_release_major for $basearch"
 
         # get yum repo file
-		public_url=http://public-yum.oracle.com
+        public_url=http://public-yum.oracle.com
         if [ -n "$repourl" ]; then
-            yum_url=$repourl
+        yum_url=$repourl
         else
             yum_url=$public_url
         fi
         if   [ $container_release_major = "4" ]; then
-            repofile=public-yum-el4.repo
-            localrepofile=local-yum-el4-$basearch.repo
+            repofile=public-yum-el4
+            localrepofil=local-yum-el4
             gpgkeyfile=RPM-GPG-KEY-oracle-el4
         elif [ $container_release_major = "5" ]; then
-            repofile=public-yum-el5.repo
-            localrepofile=local-yum-el5-$basearch.repo
+            repofile=public-yum-el5
+            localrepofile=local-yum-el5
             gpgkeyfile=RPM-GPG-KEY-oracle-el5
         elif [ $container_release_major = "6" ]; then
-            repofile=public-yum-ol6.repo
-			localrepofile=local-yum-ol6-$basearch.repo
+            repofile=public-yum-ol6
+            localrepofile=local-yum-ol6
             gpgkeyfile=RPM-GPG-KEY-oracle-ol6
         else
             die "Unsupported release $container_release_major"
         fi
         
-        wget -N -q $public_url/$repofile -O $container_rootfs/$repofile
+        if  [ $two ]; then
+            localrepofile=$localrepofile-$basearch.repo
+        else
+            localrepofile=$localrepofile.repo
+        fi
+        
+        wget -N -q $public_url/$repofile.repo -O $tmpdir/$repofile-$basearch.repo
         
         if [ -f $container_rootfs/$localrepofile ];then
-        	/bin/mv $container_rootfs/$localrepofile $container_rootfs/$localrepofile.old
+            /bin/mv $container_rootfs/$localrepofile $container_rootfs/$localrepofile.old
         fi
-	wget -N -q $public_url/$repofile -O $container_rootfs/$localrepofile
-	
+        wget -N -q $public_url/$repofile.repo -O $container_rootfs/$localrepofile
+    
         if [ $? -ne 0 ]; then
             die "Failed to download repo file $public_url/$repofile"
         fi
@@ -96,7 +104,8 @@ repo_create()
             die "Failed to download gpg-key file $public_url/$gpgkeyfile"
         fi
         
-		
+        repofile="$repofile-$basearch.repo"
+        
         if [ $manualrepo ]; then
             repo="$manualrepo"
         elif [ $container_release_minor = "UEK" ]; then
@@ -131,16 +140,22 @@ repo_create()
         
         #disable all repo
         sed -i "s|enabled=1|enabled=0|" $container_rootfs/$localrepofile
+        
+        #set arch on pulic-yum repo file.
+        sed -i "s/\$basearch/$basearch/" $tmpdir/$repofile
+        
         #enable the previous repo that were enabled
-	if [ -f $container_rootfs/$localrepofile.old ];then
-	        for enable_repo in $(tac $container_rootfs/$localrepofile.old| sed -n "/enabled=1/,/\]/ s/\]//p" | tr -d '[]');do
-	        	echo $enable_repo
-			sed -i "/\[$enable_repo\]/,/\[/ s/enabled=0/enabled=1/" $container_rootfs/$localrepofile
-		done
+    if [ -f $container_rootfs/$localrepofile.old ];then
+            enable_repo_list=$(tac $container_rootfs/$localrepofile.old| sed -n "/enabled=1/,/\]/ s/\]//p" | tr -d '[]')
+            for enable_repo in $enable_repo_list;do
+                echo "enabling repo $enable_repo"
+                sed -i "/\[$enable_repo\]/,/\[/ s/enabled=0/enabled=1/" $container_rootfs/$localrepofile
+            done
+            /bin/rm $container_rootfs/$localrepofile.old
         fi
 
         echo Repo to download is $repo
-		#Will enable the repo we are downloading
+        #Will enable the repo we are downloading
         sed -i "/\[$repo\]/,/\[/ s/enabled=0/enabled=1/" $container_rootfs/$localrepofile
         
                         # replace url if they specified one
@@ -151,53 +166,55 @@ repo_create()
         
 
         # 
-	basepath=$(sed -n -e "s/\$basearch/$basearch/" -e "/\[$repo\]/,/\[/ s/baseurl=http:\/\/public-yum.oracle.com//p" $container_rootfs/$repofile)
+        basepath=$(sed -n -e "s/\$basearch/$basearch/" -e "/\[$repo\]/,/\[/ s/baseurl=http:\/\/public-yum.oracle.com//p" $tmpdir/$repofile)
         mkdir -p $container_rootfs/$basepath
         
+        
+        
         if [ "$src" = "y" ];then
-        	basearch="$basearch --source"
-        	echo "Downloading source rpm"
+            basearch="$basearch --source"
+            echo "Downloading source rpm"
         fi
         
-		echo generating list for $basearch
-		yumdownloader_cmd="yumdownloader --url --disablerepo=* --enablerepo=$repo --resolve --installroot=/var/tmp --archlist=$basearch -c $container_rootfs/$repofile --destdir=$container_rootfs/$basepath"
+        echo generating list for $basearch
+        yumdownloader_cmd="yumdownloader --url --disablerepo=* --enablerepo=$repo --resolve --installroot=/var/tmp/public-yum-downloader/$basearch --archlist=i386,i486,i586,i686,$basearch -c $tmpdir/$repofile --destdir=$container_rootfs/$basepath"
  
- 	#yumdownloader get some ERROR 416 and fail to download, so we will generate a list
- 	#and will use wget to handle the download
- 	downloadlist="/var/tmp/public-yum-downloader/list"
+     #yumdownloader get some ERROR 416 and fail to download, so we will generate a list
+     #and will use wget to handle the download
+     downloadlist="$tmpdir/list"
  
         if [ "$min" = "y" ]; then
-			echo "Will download the minimun packages for LXC host"
-			pkgs="yum initscripts passwd rsyslog vim-minimal openssh-server dhclient chkconfig rootfiles policycoreutils oraclelinux-release"
-			$yumdownloader_cmd $pkgs > $downloadlist.log
-		else
-			$yumdownloader_cmd '*' > $downloadlist.log
-		fi
-		
+            echo "Will download the minimun packages for LXC host"
+            pkgs="yum initscripts passwd rsyslog vim-minimal openssh-server dhclient chkconfig rootfiles policycoreutils oraclelinux-release"
+            $yumdownloader_cmd $pkgs > $downloadlist.log
+        else
+            $yumdownloader_cmd '*' > $downloadlist.log
+        fi
+        
         if [ $? -ne 0 ]; then
             die "Failed to download, aborting."
         fi
 
-	awk '/http:/' $downloadlist.log > $downloadlist
+    awk '/http:/' $downloadlist.log > $downloadlist
 
-	echo "wget will process $(wc -l < $downloadlist) files"
-	
-	echo "to monitor the progress, you can do: tail -f /var/tmp/public-yum-downloader/list.log"
+    echo "wget will process $(wc -l < $downloadlist) files"
+    
+    echo "to monitor the progress, you can do: tail -f /var/tmp/public-yum-downloader/list.log"
 
-	wget -nc -P "$container_rootfs/$basepath" -i $downloadlist -o $downloadlist.log
-	if [ $? -ne 0 ]; then
+    wget -nc -P "$container_rootfs/$basepath" -i $downloadlist -o $downloadlist.log
+    if [ $? -ne 0 ]; then
             die "Failed to download, aborting."
         fi
-	
-	already_files=$(grep 'already there' $downloadlist.log | wc -l)
-	downloaded_files=$(grep 'Downloaded' $downloadlist.log | wc -l)
+    
+    already_files=$(grep 'already there' $downloadlist.log | wc -l)
+    downloaded_files=$(grep 'Downloaded' $downloadlist.log | wc -l)
 
-	echo "wget downloaded $downloaded_files file(s) and found $already_files file(s) were already on the system"
+    echo "wget downloaded $downloaded_files file(s) and found $already_files file(s) were already on the system"
 
-	#run createrepo
-	repodatacache="$container_rootfs/$basepath/repodata/.cache"
-	mkdir -p "$repodatacache"
-	createrepo --update --cache "$repodatacache" "$container_rootfs/$basepath"
+    #run createrepo
+    repodatacache="$container_rootfs/$basepath/repodata/.cache"
+    mkdir -p "$repodatacache"
+    createrepo --update --cache "$repodatacache" "$container_rootfs/$basepath"
 
     ) 200>/var/tmp/public-yum-downloader/lock
 }
@@ -205,17 +222,19 @@ repo_create()
 usage()
 {
 cat <<EOF
--h|--help
--a|--arch=<arch>	architecture (ie. i386 or x86_64)
--R|--release=<release>	release to download for the new container
--P|--path=<path>)	destination path of download (ie. /var/www/html)
--p|--proxy=<url>)	proxy (ie http://proxy:3128)
--r|--repo=<repo>)	manual repo download (ie. ol6_playground)
--m|--min		minimal package download for LXC host
--u|--url=<url>		local yum repo url (ie. local yum mirror)
--s|--src		download source rpm
+-h|--help               this screen
+-a|--arch=<arch>        architecture (ie. i386 or x86_64)
+-R|--release=<release>  release to download for the new container
+-P|--path=<path>)       destination path of download (ie. /var/www/html)
+-p|--proxy=<url>)       proxy (ie http://proxy:3128)
+-r|--repo=<repo>)       manual repo download (ie. ol6_playground)
+-m|--min                minimal package download for LXC host
+-u|--url=<url>          local yum repo url (ie. local yum mirror)
+-s|--src                download source rpm
+-2|--two                will generate separate local-yum-<4/5/6>-<arch> file
 
 Release is of the format "major.minor", for example "5.8", "6.3", or "6.latest"
+
 EOF
     return 0
 }
@@ -230,25 +249,26 @@ eval set -- "$options"
 while true
 do
     case "$1" in
-		-h|--help)		usage $0 && exit 0;;
-		-a|--arch)		arch=$2; shift 2;;
-		-R|--release)		container_release_version=$2; shift 2;;
-		-P|--path)		container_rootfs=$2; shift 2;;
-		-p|--proxy)		proxy=$2; shift 2;;
-		-r|--repo)		manualrepo=$2; shift 2;;
-		-m|--min)		min=y; shift 1 ;;
-		-u|--url)		repourl=$2; shift 2;;
-		-s|--src)		src=y; shift 1;;
-		--)			shift 1; break ;;
-		*)			break ;;
-	esac
+        -h|--help)      usage $0 && exit 0;;
+        -a|--arch)      arch=$2; shift 2;;
+        -R|--release)   container_release_version=$2; shift 2;;
+        -P|--path)      container_rootfs=$2; shift 2;;
+        -p|--proxy)     proxy=$2; shift 2;;
+        -r|--repo)      manualrepo=$2; shift 2;;
+        -m|--min)       min=y; shift 1 ;;
+        -u|--url)       repourl=$2; shift 2;;
+        -s|--src)       src=y; shift 1;;
+        -2|--two)       two=y; shift 1;;
+        --)             shift 1; break ;;
+        *)              break ;;
+    esac
 done
 
 # make sure mandatory args are given and valid
 
 if [ -z "$arch" ]; then
-	arch=$(arch)
-	echo "No arch specified with -a, defaulting to host arch $arch"
+    arch=$(arch)
+    echo "No arch specified with -a, defaulting to host arch $arch"
 fi
 
 basearch=$arch
@@ -263,30 +283,30 @@ if [ "$arch" != "i386" -a "$arch" != "x86_64" ]; then
 fi
 
 if [ -z "$container_release_version" ]; then
-	if [[ $manualrepo == *l5* ]]; then
-		container_release_version="5.latest"
-	elif [[ $manualrepo == *l4* ]]; then
-		container_release_version="4.latest"	
-	else container_release_version="6.latest"
-		echo "No release specified with -R, defaulting to 6.latest"
-	fi
+    if [[ $manualrepo == *l5* ]]; then
+        container_release_version="5.latest"
+    elif [[ $manualrepo == *l4* ]]; then
+        container_release_version="4.latest"    
+    else container_release_version="6.latest"
+        echo "No release specified with -R, defaulting to 6.latest"
+    fi
 else
-	echo "Release specified $container_release_version"
+    echo "Release specified $container_release_version"
 fi
 container_release_major=`echo $container_release_version |awk -F '.' '{print $1}'`
 container_release_minor=`echo $container_release_version |awk -F '.' '{print $2}'`
 
 if [ -z "$container_rootfs" ]; then
-	echo "No path specified with -P"
-	echo "Specify the DocumentRoot of your webserver. ie -P /var/www/html"
-	exit 1
+    echo "No path specified with -P"
+    echo "Specify the DocumentRoot of your webserver. ie -P /var/www/html"
+    exit 1
 fi
 
 if [ "$proxy" ]; then
-	echo "Using proxy $proxy"
-	export http_proxy=$proxy https_proxy=$proxy proxy=$proxy
+    echo "Using proxy $proxy"
+    export http_proxy=$proxy https_proxy=$proxy proxy=$proxy
 else
-	echo "No proxy specified"
+    echo "No proxy specified"
 fi
 
 touch $container_rootfs/.test 2>/dev/null
