@@ -1,5 +1,5 @@
 #!/bin/bash
-# 201301282300
+# 2013012908
 # public-yum-downloader.sh
 #
 # public-yum-downloader script, to download a yum repository
@@ -141,9 +141,6 @@ repo_create()
         #disable all repo
         sed -i "s|enabled=1|enabled=0|" $container_rootfs/$localrepofile
         
-        #set arch on pulic-yum repo file.
-        sed -i "s/\$basearch/$basearch/" $tmpdir/$repofile
-        
         #enable the previous repo that were enabled
     if [ -f $container_rootfs/$localrepofile.old ];then
             enable_repo_list=$(tac $container_rootfs/$localrepofile.old| sed -n "/enabled=1/,/\]/ s/\]//p" | tr -d '[]')
@@ -168,20 +165,37 @@ repo_create()
         # 
         basepath=$(sed -n -e "s/\$basearch/$basearch/" -e "/\[$repo\]/,/\[/ s/baseurl=http:\/\/public-yum.oracle.com//p" $tmpdir/$repofile)
         mkdir -p $container_rootfs/$basepath
+
+
         
+        #set arch on public-yum repo file.
+        sed -i "s/\$basearch/$basearch/" $tmpdir/$repofile
         
+        #rename repo on public-yum file
+        # reason 1: If the server have local repo file set, can cause troubles if are called the same
+        # reason 2: Yumdownloader use local cache that get confused when host/repo are different arch
+        #/var/tmp/yum-oracle-QUcCyV/x86_64/$releasever/ol6_u3_base_i386/repomd.xml
+        #/var/tmp/yum-oracle-QUcCyV/x86_64/$releasever/ol6_u3_base_x86_64/repomd.xml
+        repobasearch=$repo\_$basearch
+        sed -i "s/\[$repo\]/\[$repobasearch\]/" $tmpdir/$repofile
+        
+        echo $repo $repobasearch 
+        
+        tmpinstallroot="$tmpdir/$basearch"
         
         if [ "$src" = "y" ];then
-            basearch="$basearch --source"
+            basearch="$basearch,src --source"
             echo "Downloading source rpm"
         fi
         
         echo generating list for $basearch
-        yumdownloader_cmd="yumdownloader --url --disablerepo=* --enablerepo=$repo --resolve --installroot=/var/tmp/public-yum-downloader/$basearch --archlist=i386,i486,i586,i686,$basearch -c $tmpdir/$repofile --destdir=$container_rootfs/$basepath"
+        yumdownloader_cmd="yumdownloader --url --disablerepo=* --enablerepo=$repobasearch --resolve --installroot=$tmpinstallroot --archlist=i386,i486,i586,i686,$basearch -c $tmpdir/$repofile --destdir=$container_rootfs/$basepath"
  
-     #yumdownloader get some ERROR 416 and fail to download, so we will generate a list
-     #and will use wget to handle the download
-     downloadlist="$tmpdir/list"
+        echo $yumdownloader_cmd
+ 
+         #yumdownloader get some ERROR 416 and fail to download, so we will generate a list
+         #and will use wget to handle the download
+         downloadlist="$tmpdir/list"
  
         if [ "$min" = "y" ]; then
             echo "Will download the minimun packages for LXC host"
@@ -227,7 +241,7 @@ cat <<EOF
 -R|--release=<release>  release to download for the new container
 -P|--path=<path>)       destination path of download (ie. /var/www/html)
 -p|--proxy=<url>)       proxy (ie http://proxy:3128)
--r|--repo=<repo>)       manual repo download (ie. ol6_playground)
+-r|--repo=<repo>)       manual repo download (ie. ol6_playground_latest)
 -m|--min                minimal package download for LXC host
 -u|--url=<url>          local yum repo url (ie. local yum mirror)
 -s|--src                download source rpm
