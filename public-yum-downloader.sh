@@ -142,7 +142,7 @@ repo_create()
         sed -i "s|enabled=1|enabled=0|" $container_rootfs/$localrepofile
         
         #enable the previous repo that were enabled
-    if [ -f $container_rootfs/$localrepofile.old ];then
+        if [ -f $container_rootfs/$localrepofile.old ];then
             enable_repo_list=$(tac $container_rootfs/$localrepofile.old| sed -n "/enabled=1/,/\]/ s/\]//p" | tr -d '[]')
             for enable_repo in $enable_repo_list;do
                 echo "enabling repo $enable_repo"
@@ -151,17 +151,19 @@ repo_create()
             /bin/rm $container_rootfs/$localrepofile.old
         fi
 
+        # replace url if they specified one
+        if [ -n "$repourl" ]; then
+            echo "set $repourl in $localrepofile"
+            sed -i "s|baseurl=http://public-yum.oracle.com/repo|baseurl=$repourl/repo|" $container_rootfs/$localrepofile
+            sed -i "s|gpgkey=http://public-yum.oracle.com|gpgkey=$repourl|" $container_rootfs/$localrepofile
+        else
+            echo "No url specified for local repo, generated local-yum repo file will point to oracle.com"
+        fi
+
         echo Repo to download is $repo
         #Will enable the repo we are downloading
         sed -i "/\[$repo\]/,/\[/ s/enabled=0/enabled=1/" $container_rootfs/$localrepofile
         
-                        # replace url if they specified one
-        if [ -n "$repourl" ]; then
-            sed -i "s|baseurl=http://public-yum.oracle.com/repo|baseurl=$repourl/repo|" $container_rootfs/$localrepofile
-            sed -i "s|gpgkey=http://public-yum.oracle.com|gpgkey=$repourl|" $container_rootfs/$localrepofile
-        fi
-        
-
         # 
         basepath=$(sed -n -e "s/\$basearch/$basearch/" -e "/\[$repo\]/,/\[/ s/baseurl=http:\/\/public-yum.oracle.com//p" $tmpdir/$repofile)
         mkdir -p $container_rootfs/$basepath
@@ -179,19 +181,15 @@ repo_create()
         repobasearch=$repo\_$basearch
         sed -i "s/\[$repo\]/\[$repobasearch\]/" $tmpdir/$repofile
         
-        echo $repo $repobasearch 
-        
         tmpinstallroot="$tmpdir/$basearch"
         
         if [ "$src" = "y" ];then
             basearch="$basearch,src --source"
-            echo "Downloading source rpm"
+            echo "Will include source rpm"
         fi
         
         echo generating list for $basearch
-        yumdownloader_cmd="yumdownloader --url --disablerepo=* --enablerepo=$repobasearch --resolve --installroot=$tmpinstallroot --archlist=i386,i486,i586,i686,$basearch -c $tmpdir/$repofile --destdir=$container_rootfs/$basepath"
- 
-        echo $yumdownloader_cmd
+        yumdownloader_cmd="yumdownloader -v --url --disablerepo=* --enablerepo=$repobasearch --resolve --installroot=$tmpinstallroot --archlist=i386,i486,i586,i686,$basearch -c $tmpdir/$repofile --destdir=$container_rootfs/$basepath"
  
          #yumdownloader get some ERROR 416 and fail to download, so we will generate a list
          #and will use wget to handle the download
@@ -220,7 +218,7 @@ repo_create()
             die "Failed to download, aborting."
         fi
     
-    already_files=$(grep 'already there' $downloadlist.log | wc -l)
+    already_files=$(grep 'already' $downloadlist.log | wc -l)
     downloaded_files=$(grep 'Downloaded' $downloadlist.log | wc -l)
 
     echo "wget downloaded $downloaded_files file(s) and found $already_files file(s) were already on the system"
@@ -253,7 +251,7 @@ EOF
     return 0
 }
 
-options=$(getopt -o ha:R:P:p:r:mu:s -l help,arch:,release:,path:,proxy:,repo:,min,url:,src -- "$@")
+options=$(getopt -o ha:R:P:p:r:mu:s2 -l help,arch:,release:,path:,proxy:,repo:,min,url:,src,two -- "$@")
 if [ $? -ne 0 ]; then
     usage $(basename $0)
     exit 1
