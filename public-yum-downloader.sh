@@ -239,7 +239,7 @@ cat <<EOF
 -R|--release=<release>  release to download for the new container
 -P|--path=<path>)       destination path of download (ie. /var/www/html)
 -p|--proxy=<url>)       proxy (ie http://proxy:3128)
--r|--repo=<repo>)       manual repo download (ie. ol6_playground_latest)
+-r|--repo=<repo>)       manual repo download (ie. the beta ol6_playground_latest)
 -m|--min                minimal package download for LXC host
 -u|--url=<url>          local yum repo url (ie. local yum mirror)
 -s|--src                download source rpm
