@@ -146,7 +146,7 @@ repo_create()
             if [ -f $tmpdir/$localrepofile.old ];then
                 enable_repo_list=$(tac $tmpdir/$localrepofile.old| sed -n "/enabled=1/,/\]/ s/\]//p" | tr -d '[]')
                 for enable_repo in $enable_repo_list;do
-                    echo "enabling repo $enable_repo"
+                    echo "enabling previous repo $enable_repo on $repourl/$localrepofile"
                     sed -i "/\[$enable_repo\]/,/\[/ s/enabled=0/enabled=1/" $container_rootfs/$localrepofile
                 done
                 /bin/rm $tmpdir/$localrepofile.old
@@ -155,7 +155,10 @@ repo_create()
             sed -i "s|baseurl=http://public-yum.oracle.com/repo|baseurl=$repourl/repo|" $container_rootfs/$localrepofile
             sed -i "s|gpgkey=http://public-yum.oracle.com|gpgkey=$repourl|" $container_rootfs/$localrepofile
             #Will enable the repo we are downloading
+            echo "enabling $repo on $repourl/$localrepofile"
             sed -i "/\[$repo\]/,/\[/ s/enabled=0/enabled=1/" $container_rootfs/$localrepofile
+            echo "file $container_rootfs/$localrepofile created"
+            echo "use $repourl/$localrepofile for remote clients"
         else
             echo "No url specified for local repo"
         fi
@@ -242,6 +245,7 @@ cat <<EOF
 -2|--two                will generate separate local-yum-<4/5/6>-<arch> file
 
 Release is of the format "major.minor", for example "5.8", "6.3", or "6.latest"
+To download latest UEK kernel, use 6.UEK or 5.UEK
 
 EOF
     return 0
