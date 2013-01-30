@@ -220,7 +220,7 @@ repo_create()
     already_files=$(grep 'already' $downloadlist.log | wc -l)
     downloaded_files=$(grep 'Downloaded' $downloadlist.log | wc -l)
 
-    echo "wget downloaded $downloaded_files file\(s\) and found $already_files file\(s\) were already on the system"
+    echo "wget downloaded $downloaded_files file(s) and found $already_files file(s) were already on the system"
 
     #run createrepo
     repodatacache="$container_rootfs/$basepath/repodata/.cache"
