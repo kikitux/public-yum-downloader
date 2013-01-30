@@ -235,7 +235,7 @@ usage()
 cat <<EOF
 -h|--help               this screen
 -a|--arch=<arch>        architecture (ie. i386 or x86_64)
--R|--release=<release>  release to download for the new container
+-R|--release=<release>  release to download
 -P|--path=<path>)       destination path of download (ie. /var/www/html)
 -p|--proxy=<url>)       proxy (ie http://proxy:3128)
 -r|--repo=<repo>)       manual repo download (ie. the beta ol6_playground_latest)
