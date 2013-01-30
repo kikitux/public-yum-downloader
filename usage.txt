@@ -1,0 +1,13 @@
+public-yum-downloader.sh -h
+-h|--help               this screen
+-a|--arch=<arch>        architecture (ie. i386 or x86_64)
+-R|--release=<release>  release to download for the new container
+-P|--path=<path>)       destination path of download (ie. /var/www/html)
+-p|--proxy=<url>)       proxy (ie http://proxy:3128)
+-r|--repo=<repo>)       manual repo download (ie. the beta ol6_playground_latest)
+-m|--min                minimal package download for LXC host
+-u|--url=<url>          local yum repo url (ie. local yum mirror)
+-s|--src                download source rpm
+-2|--two                will generate separate local-yum-<4/5/6>-<arch> file
+
+Release is of the format "major.minor", for example "5.8", "6.3", or "6.latest"
