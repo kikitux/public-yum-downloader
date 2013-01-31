@@ -153,9 +153,6 @@ repo_create()
             echo "set $repourl in $localrepofile"
             sed -i "s|baseurl=http://public-yum.oracle.com/repo|baseurl=$repourl/repo|" $container_rootfs/$localrepofile
             sed -i "s|gpgkey=http://public-yum.oracle.com|gpgkey=$repourl|" $container_rootfs/$localrepofile
-            #Will enable the repo we are downloading
-            echo "enabling $repo on $repourl/$localrepofile"
-            sed -i "/\[$repo\]/,/\[/ s/enabled=0/enabled=1/" $container_rootfs/$localrepofile
             echo "file $container_rootfs/$localrepofile created"
             echo "use $repourl/$localrepofile for remote clients"
         else
@@ -224,6 +221,9 @@ repo_create()
     repodatacache="$container_rootfs/$basepath/repodata/.cache"
     mkdir -p "$repodatacache"
     createrepo --update --cache "$repodatacache" "$container_rootfs/$basepath"
+
+    echo "enabling $repo on $repourl/$localrepofile"
+    sed -i "/\[$repo\]/,/\[/ s/enabled=0/enabled=1/" $container_rootfs/$localrepofile
 
     ) 200>/var/tmp/public-yum-downloader/lock
 }
