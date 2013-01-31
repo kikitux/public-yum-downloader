@@ -68,26 +68,25 @@ repo_create()
             yum_url=$public_url
         fi
         if   [ $container_release_major = "4" ]; then
-            repofile=public-yum-el4
+            repofile=public-yum-el4.repo
             localrepofil=local-yum-el4
             gpgkeyfile=RPM-GPG-KEY-oracle-el4
         elif [ $container_release_major = "5" ]; then
-            repofile=public-yum-el5
+            repofile=public-yum-el5.repo
             localrepofile=local-yum-el5
             gpgkeyfile=RPM-GPG-KEY-oracle-el5
         elif [ $container_release_major = "6" ]; then
-            repofile=public-yum-ol6
+            repofile=public-yum-ol6.repo
             localrepofile=local-yum-ol6
             gpgkeyfile=RPM-GPG-KEY-oracle-ol6
         else
             die "Unsupported release $container_release_major"
         fi
     
-        wget -N -q $public_url/$repofile.repo -O $tmpdir/$repofile-$basearch.repo    
+        wget -N -q $public_url/$repofile -O $tmpdir/$repofile    
         if [ $? -ne 0 ]; then
             die "Failed to download repo file $public_url/$repofile"
         fi
-        repofile=$repofile-$basearch.repo
         wget -N -q $public_url/$gpgkeyfile -O $container_rootfs/$gpgkeyfile
         if [ $? -ne 0 ]; then
             die "Failed to download gpg-key file $public_url/$gpgkeyfile"
@@ -137,7 +136,7 @@ repo_create()
             if [ -f $container_rootfs/$localrepofile ];then
                 /bin/mv $container_rootfs/$localrepofile $tmpdir/$localrepofile.old
             fi
-            wget -N -q $public_url/$repofile.repo -O $container_rootfs/$localrepofile
+            wget -N -q $public_url/$repofile -O $container_rootfs/$localrepofile
 
             #disable all repo
             sed -i "s|enabled=1|enabled=0|" $container_rootfs/$localrepofile
@@ -164,8 +163,7 @@ repo_create()
         fi
 
         echo repo to download is $repo
-        
-        # 
+
         basepath=$(sed -n -e "s/\$basearch/$basearch/" -e "/\[$repo\]/,/\[/ s/baseurl=http:\/\/public-yum.oracle.com//p" $tmpdir/$repofile)
         mkdir -p $container_rootfs/$basepath
 
