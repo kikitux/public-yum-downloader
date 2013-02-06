@@ -1,5 +1,5 @@
 #!/bin/bash
-# 201302071142
+# 201302071200
 # public-yum-downloader.sh
 #
 # public-yum-downloader script, to download a yum repository
@@ -10,7 +10,7 @@
 #
 # Author: Alvaro Miranda
 # Email    : kikitux@gmail.com
-# Web    : http://zerodowntime.blogspot.co.nz
+# Web    : http://kikitux.blogspot.co.nz
 # 
 # Based on the lxc-oracle template script from Oracle
 # from Wim Coekaerts and Dwight Engen
@@ -69,15 +69,15 @@ repo_create()
         fi
         if   [ $container_release_major = "4" ]; then
             repofile=public-yum-el4.repo
-            localrepofil=local-yum-el4
+            localrepofil=local-yum-el4.repo
             gpgkeyfile=RPM-GPG-KEY-oracle-el4
         elif [ $container_release_major = "5" ]; then
             repofile=public-yum-el5.repo
-            localrepofile=local-yum-el5
+            localrepofile=local-yum-el5.repo
             gpgkeyfile=RPM-GPG-KEY-oracle-el5
         elif [ $container_release_major = "6" ]; then
             repofile=public-yum-ol6.repo
-            localrepofile=local-yum-ol6
+            localrepofile=local-yum-ol6.repo
             gpgkeyfile=RPM-GPG-KEY-oracle-ol6
         else
             die "Unsupported release $container_release_major"
@@ -107,7 +107,11 @@ repo_create()
                 repo="ol"$container_release_major"_"$container_release_minor
             fi
         elif [ $container_release_minor = "0" ]; then
-            repo="ol"$container_release_major"_ga_base"
+            if [ $container_release_minor -lt "5"  ]; then
+                repo="el"$container_release_major"_ga_base"
+            else
+                repo="ol"$container_release_major"_ga_base"
+            fi
         elif [ $container_release_major = "5" ]; then
             if [ $container_release_minor -lt "5"  ]; then
                 repo="el"$container_release_major"_u"$container_release_minor"_base"
@@ -123,16 +127,9 @@ repo_create()
         else
             repo="ol"$container_release_major"_u"$container_release_minor"_base"
         fi
-        
-
 
         # replace url if they specified one
         if [ -n "$repourl" ]; then
-            if  [ $two ]; then
-                localrepofile=$localrepofile-$basearch.repo
-            else
-                localrepofile=$localrepofile.repo
-            fi        
             if [ -f $container_rootfs/$localrepofile ];then
                 /bin/mv $container_rootfs/$localrepofile $tmpdir/$localrepofile.old
             fi
@@ -140,7 +137,7 @@ repo_create()
 
             #disable all repo
             sed -i "s|enabled=1|enabled=0|" $container_rootfs/$localrepofile
-        
+
             #enable the previous repo that were enabled
             if [ -f $tmpdir/$localrepofile.old ];then
                 enable_repo_list=$(tac $tmpdir/$localrepofile.old| sed -n "/enabled=1/,/\]/ s/\]//p" | tr -d '[]')
@@ -201,30 +198,23 @@ repo_create()
             die "Failed to download, aborting."
         fi
 
-    awk '/http:/' $downloadlist.log > $downloadlist
+    awk '/http:/' $downloadlist.log | sort -u > $downloadlist
 
     echo "wget will process $(wc -l < $downloadlist) files"
-    
 
-
-    wget -nc -P "$container_rootfs/$basepath" -i $downloadlist | tee $downloadlist.log
+    wget -nc -P "$container_rootfs/$basepath" -i $downloadlist
     if [ $? -ne 0 ]; then
             die "Failed to download, aborting."
         fi
-    
-    already_files=$(grep 'already' $downloadlist.log | wc -l)
-    downloaded_files=$(grep 'Downloaded' $downloadlist.log | wc -l)
-
-    echo "wget downloaded $downloaded_files file(s) and found $already_files file(s) were already on the system"
 
     #run createrepo
     repodatacache="$container_rootfs/$basepath/repodata/.cache"
     mkdir -p "$repodatacache"
     createrepo --update --cache "$repodatacache" "$container_rootfs/$basepath"
-
-    echo "enabling $repo on $repourl/$localrepofile"
-    sed -i "/\[$repo\]/,/\[/ s/enabled=0/enabled=1/" $container_rootfs/$localrepofile
-
+    if [ -n "$repourl" ]; then
+        echo "enabling $repo on $localrepofile"
+        sed -i "/\[$repo\]/,/\[/ s/enabled=0/enabled=1/" $container_rootfs/$localrepofile
+    fi
     ) 200>/var/tmp/public-yum-downloader/lock
 }
 
@@ -240,7 +230,6 @@ cat <<EOF
 -m|--min                minimal package download for LXC host
 -u|--url=<url>          local yum repo url (ie. local yum mirror)
 -s|--src                download source rpm
--2|--two                will generate separate local-yum-<4/5/6>-<arch> file
 
 Release is of the format "major.minor", for example "5.8", "6.3", or "6.latest"
 To download latest UEK kernel, use 6.UEK or 5.UEK
@@ -268,7 +257,6 @@ do
         -m|--min)       min=y; shift 1 ;;
         -u|--url)       repourl=$2; shift 2;;
         -s|--src)       src=y; shift 1;;
-        -2|--two)       two=y; shift 1;;
         --)             shift 1; break ;;
         *)              break ;;
     esac
