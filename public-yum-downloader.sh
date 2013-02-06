@@ -205,9 +205,9 @@ repo_create()
 
     echo "wget will process $(wc -l < $downloadlist) files"
     
-    echo "to monitor the progress, you can do: tail -f /var/tmp/public-yum-downloader/list.log"
 
-    wget -nc -P "$container_rootfs/$basepath" -i $downloadlist -o $downloadlist.log
+
+    wget -nc -P "$container_rootfs/$basepath" -i $downloadlist | tee $downloadlist.log
     if [ $? -ne 0 ]; then
             die "Failed to download, aborting."
         fi
