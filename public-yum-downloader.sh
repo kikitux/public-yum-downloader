@@ -1,5 +1,5 @@
 #!/bin/bash
-# 201302071530
+# 201302071930
 # public-yum-downloader.sh
 #
 # public-yum-downloader script, to download a yum repository
@@ -206,7 +206,7 @@ repo_create()
         echo "verifying local path $local for rpms"
         while read line
             do  rpm=$(echo $line | rev | cut -d'/' -f1 | rev)
-                find $local -name $rpm -exec cp -v -n {} "$container_rootfs/$basepath"/$rpm \;
+                find $local -name $rpm -exec cp -v -n {} "$container_rootfs/$basepath" \;
                 if [ ! -f "$container_rootfs/$basepath/$rpm" ] ; then
                     echo "$rpm not found, downloading.."
                     wget -nc -P "$container_rootfs/$basepath" $line
