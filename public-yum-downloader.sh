@@ -98,34 +98,32 @@ repo_create()
             if [ $container_release_major = "6" -o $container_release_major = "5"  ]; then
                 repo="ol"$container_release_major"_"$container_release_minor"_latest"
             else
-                die "Unsupported release $container_release_major"
+                die "Unsupported release $container_release_major.$container_release_minor"
             fi
         elif [ $container_release_minor = "latest" ]; then
-            if [ $container_release_major = "5" -o $container_release_major = "4"  ]; then
+            if [ $container_release_major = "4" -o $container_release_major = "5"  ]; then
                 repo="el"$container_release_major"_"$container_release_minor
             else
                 repo="ol"$container_release_major"_"$container_release_minor
             fi
-        elif [ $container_release_minor = "0" ]; then
-            if [ $container_release_minor -lt "5"  ]; then
-                repo="el"$container_release_major"_ga_base"
-            else
+        elif [ $container_release_major = "6" ]; then
+            if   [ $container_release_minor = "0" ]; then
                 repo="ol"$container_release_major"_ga_base"
+            else
+                repo="ol"$container_release_major"_u"$container_release_minor"_base"
             fi
         elif [ $container_release_major = "5" ]; then
-            if [ $container_release_minor -lt "5"  ]; then
+            if   [ $container_release_minor = "0" ]; then
+                repo="el"$container_release_major"_ga_base"
+            elif [ $container_release_minor -lt "6" ]; then
                 repo="el"$container_release_major"_u"$container_release_minor"_base"
             else
                 repo="ol"$container_release_major"_u"$container_release_minor"_base"
             fi
-        elif [ $container_release_major = "4" ]; then
-            if [ $container_release_minor -lt "6"  ]; then
-                die "Unsupported release $container_release_major"
-            else
-                repo="el"$container_release_major"_u"$container_release_minor"_base"
-            fi
+        elif [ $container_release_major = "4" -a $container_release_minor -gt "5" ]; then
+            repo="el"$container_release_major"_u"$container_release_minor"_base"
         else
-            repo="ol"$container_release_major"_u"$container_release_minor"_base"
+            die "Unsupported release $container_release_major.$container_release_minor"
         fi
 
         # replace url if they specified one
@@ -187,7 +185,7 @@ repo_create()
          downloadlist="$tmpdir/list"
  
         if [ "$min" = "y" ]; then
-            echo "Will download the minimun packages for LXC host"
+            echo "Will download the minimum packages for LXC host"
             pkgs="yum initscripts passwd rsyslog vim-minimal openssh-server dhclient chkconfig rootfiles policycoreutils oraclelinux-release"
             $yumdownloader_cmd $pkgs > $downloadlist.log
         else
