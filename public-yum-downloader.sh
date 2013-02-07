@@ -1,5 +1,5 @@
 #!/bin/bash
-# 201302071200
+# 201302071530
 # public-yum-downloader.sh
 #
 # public-yum-downloader script, to download a yum repository
@@ -202,10 +202,23 @@ repo_create()
 
     echo "wget will process $(wc -l < $downloadlist) files"
 
+    if [ $local ] ; then
+        echo "verifying local path $local for rpms"
+        while read line
+            do  rpm=$(echo $line | rev | cut -d'/' -f1 | rev)
+                find $local -name $rpm -exec cp -v -n {} "$container_rootfs/$basepath"/$rpm \;
+                if [ ! -f "$container_rootfs/$basepath/$rpm" ] ; then
+                    echo "$rpm not found, downloading.."
+                    wget -nc -P "$container_rootfs/$basepath" $line
+                fi 
+        done < $downloadlist
+        
+    else
     wget -nc -P "$container_rootfs/$basepath" -i $downloadlist
     if [ $? -ne 0 ]; then
             die "Failed to download, aborting."
         fi
+    fi
 
     #run createrepo
     repodatacache="$container_rootfs/$basepath/repodata/.cache"
@@ -224,12 +237,13 @@ cat <<EOF
 -h|--help               this screen
 -a|--arch=<arch>        architecture (ie. i386 or x86_64)
 -R|--release=<release>  release to download
--P|--path=<path>)       destination path of download (ie. /var/www/html)
--p|--proxy=<url>)       proxy (ie http://proxy:3128)
--r|--repo=<repo>)       manual repo download (ie. ol6_addons)
+-P|--path=<path>        destination path of download (ie. /var/www/html)
+-p|--proxy=<url>        proxy (ie http://proxy:3128)
+-r|--repo=<repo>        manual repo download (ie. ol6_addons)
 -m|--min                minimal package download for LXC host
 -u|--url=<url>          local yum repo url (ie. local yum mirror)
 -s|--src                download source rpm
+-l|--local=<path>>      local path to check for rpms (ie. /media/iso)
 
 Release is of the format "major.minor", for example "5.8", "6.3", or "6.latest"
 To download latest UEK kernel, use 6.UEK or 5.UEK
@@ -238,7 +252,7 @@ EOF
     return 0
 }
 
-options=$(getopt -o ha:R:P:p:r:mu:s2 -l help,arch:,release:,path:,proxy:,repo:,min,url:,src,two -- "$@")
+options=$(getopt -o ha:R:P:p:r:mu:sl: -l help,arch:,release:,path:,proxy:,repo:,min,url:,src,local: -- "$@")
 if [ $? -ne 0 ]; then
     usage $(basename $0)
     exit 1
@@ -257,6 +271,7 @@ do
         -m|--min)       min=y; shift 1 ;;
         -u|--url)       repourl=$2; shift 2;;
         -s|--src)       src=y; shift 1;;
+        -l|--local)     local=$2; shift 1;;
         --)             shift 1; break ;;
         *)              break ;;
     esac
