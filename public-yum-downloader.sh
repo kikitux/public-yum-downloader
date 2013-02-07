@@ -212,10 +212,9 @@ repo_create()
                     wget -nc -P "$container_rootfs/$basepath" $line
                 fi 
         done < $downloadlist
-        
     else
-    wget -nc -P "$container_rootfs/$basepath" -i $downloadlist
-    if [ $? -ne 0 ]; then
+        wget -nc -P "$container_rootfs/$basepath" -i $downloadlist
+        if [ $? -ne 0 ]; then
             die "Failed to download, aborting."
         fi
     fi
