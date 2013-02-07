@@ -240,7 +240,7 @@ cat <<EOF
 -p|--proxy=<url>        proxy (ie http://proxy:3128)
 -r|--repo=<repo>        manual repo download (ie. ol6_addons)
 -m|--min                minimal package download for LXC host
--u|--url=<url>          local yum repo url (ie. local yum mirror)
+-u|--url=<url>          local yum repo url (ie. http://mirandaa00)
 -s|--src                download source rpm
 -l|--local=<path>>      local path to check for rpms (ie. /media/iso)
 
