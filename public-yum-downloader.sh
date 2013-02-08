@@ -1,5 +1,5 @@
 #!/bin/bash
-# 201302081330
+# 201302081350
 # public-yum-downloader.sh
 #
 # public-yum-downloader script, to download a yum repository
@@ -8,9 +8,9 @@
 # Check updates on github
 # https://github.com/kikitux/public-yum-downloader
 #
-# Author: Alvaro Miranda
-# Email    : kikitux@gmail.com
-# Web    : http://kikitux.blogspot.co.nz
+# Author    :   Alvaro Miranda
+# Email     :   kikitux@gmail.com
+# Web       :   http://kikitux.blogspot.co.nz
 # 
 # Based on the lxc-oracle template script from Oracle
 # from Wim Coekaerts and Dwight Engen
