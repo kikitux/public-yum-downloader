@@ -1,5 +1,5 @@
 #!/bin/bash
-# 201302071930
+# 201302081330
 # public-yum-downloader.sh
 #
 # public-yum-downloader script, to download a yum repository
