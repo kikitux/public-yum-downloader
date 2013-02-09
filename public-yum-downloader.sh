@@ -1,5 +1,5 @@
 #!/bin/bash
-# 201302091600
+# 201302091850
 # public-yum-downloader.sh
 #
 # public-yum-downloader script, to download a yum repository
@@ -37,6 +37,11 @@ die()
     exit 1
 }
 
+cleanup() {
+echo "interrupted "
+\rm -r /var/tmp/public-yum-downloader
+exit 1
+}
 
 repo_create()
 {
@@ -69,7 +74,7 @@ repo_create()
         fi
         if   [ $container_release_major = "4" ]; then
             repofile=public-yum-el4.repo
-            localrepofil=local-yum-el4.repo
+            localrepofile=local-yum-el4.repo
             gpgkeyfile=RPM-GPG-KEY-oracle-el4
         elif [ $container_release_major = "5" ]; then
             repofile=public-yum-el5.repo
@@ -184,7 +189,7 @@ repo_create()
          #and will use wget to handle the download
          downloadlist="$tmpdir/list"
  
-        if [ "$min" = "y" ]; then
+        if [ "$min" = "y" ] && [[ $repo = *[0-9a]_base || $repo = *[0-9]_latest ]]; then
             echo "Will download the minimum packages for LXC host"
             pkgs="yum initscripts passwd rsyslog vim-minimal openssh-server dhclient chkconfig rootfiles policycoreutils oraclelinux-release"
             $yumdownloader_cmd $pkgs > $downloadlist.log
@@ -228,6 +233,7 @@ repo_create()
         echo "enabling $repo on $localrepofile"
         sed -i "/\[$repo\]/,/\[/ s/enabled=0/enabled=1/" $container_rootfs/$localrepofile
     fi
+    return 0
     ) 200>/var/tmp/public-yum-downloader/lock
 }
 
@@ -300,7 +306,8 @@ if [ -z "$container_release_version" ]; then
         container_release_version="5.latest"
     elif [[ $manualrepo == *l4* ]]; then
         container_release_version="4.latest"    
-    else container_release_version="6.latest"
+    else
+        container_release_version="6.latest"
         echo "No release specified with -R, defaulting to 6.latest"
     fi
 else
@@ -331,3 +338,6 @@ fi
 trap cleanup SIGHUP SIGINT SIGTERM
 
 repo_create
+if [ $? = 0 ]; then
+    \rm -r /var/tmp/public-yum-downloader
+fi
