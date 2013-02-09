@@ -38,9 +38,14 @@ die()
 }
 
 cleanup() {
-echo "interrupted "
-\rm -r /var/tmp/public-yum-downloader
-exit 1
+if [ "$1" ] ; then
+    \rm -r /var/tmp/public-yum-downloader
+else
+    echo "interrupted "
+    \rm -r /var/tmp/public-yum-downloader
+    exit 1
+fi
+
 }
 
 repo_create()
@@ -338,6 +343,7 @@ fi
 trap cleanup SIGHUP SIGINT SIGTERM
 
 repo_create
-if [ $? = 0 ]; then
-    \rm -r /var/tmp/public-yum-downloader
-fi
+cleanup $? 
+
+trap - EXIT
+exit 0
