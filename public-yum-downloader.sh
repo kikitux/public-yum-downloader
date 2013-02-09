@@ -1,5 +1,5 @@
 #!/bin/bash
-# 201302081350
+# 201302091600
 # public-yum-downloader.sh
 #
 # public-yum-downloader script, to download a yum repository
@@ -82,7 +82,7 @@ repo_create()
         else
             die "Unsupported release $container_release_major"
         fi
-    
+
         wget -N -q $public_url/$repofile -O $tmpdir/$repofile    
         if [ $? -ne 0 ]; then
             die "Failed to download repo file $public_url/$repofile"
@@ -91,7 +91,7 @@ repo_create()
         if [ $? -ne 0 ]; then
             die "Failed to download gpg-key file $public_url/$gpgkeyfile"
         fi
-        
+
         if [ $manualrepo ]; then
             repo="$manualrepo"
         elif [ $container_release_minor = "UEK" ]; then
@@ -129,7 +129,7 @@ repo_create()
         # replace url if they specified one
         if [ -n "$repourl" ]; then
             if [ -f $container_rootfs/$localrepofile ];then
-                /bin/mv $container_rootfs/$localrepofile $tmpdir/$localrepofile.old
+                \mv $container_rootfs/$localrepofile $tmpdir/$localrepofile.old
             fi
             wget -N -q $public_url/$repofile -O $container_rootfs/$localrepofile
 
@@ -143,7 +143,7 @@ repo_create()
                     echo "enabling previous repo $enable_repo on $repourl/$localrepofile"
                     sed -i "/\[$enable_repo\]/,/\[/ s/enabled=0/enabled=1/" $container_rootfs/$localrepofile
                 done
-                /bin/rm $tmpdir/$localrepofile.old
+                \rm $tmpdir/$localrepofile.old
             fi
             echo "set $repourl in $localrepofile"
             sed -i "s|baseurl=http://public-yum.oracle.com/repo|baseurl=$repourl/repo|" $container_rootfs/$localrepofile
@@ -199,6 +199,9 @@ repo_create()
     awk '/http:/' $downloadlist.log | sort -u > $downloadlist
 
     echo "wget will process $(wc -l < $downloadlist) files"
+
+    #look and delete files of zero bytes
+    find "$container_rootfs/$basepath" -size 0 -delete
 
     if [ $local ] ; then
         echo "verifying local path $local for rpms"
