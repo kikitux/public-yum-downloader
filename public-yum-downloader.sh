@@ -1,5 +1,5 @@
 #!/bin/bash
-# 201302091850
+# 201302250000
 # public-yum-downloader.sh
 #
 # public-yum-downloader script, to download a yum repository
@@ -38,14 +38,7 @@ die()
 }
 
 cleanup() {
-if [ "$1" ] ; then
-    \rm -r /var/tmp/public-yum-downloader
-else
-    echo "interrupted "
-    \rm -r /var/tmp/public-yum-downloader
     exit 1
-fi
-
 }
 
 repo_create()
@@ -343,7 +336,6 @@ fi
 trap cleanup SIGHUP SIGINT SIGTERM
 
 repo_create
-cleanup $? 
 
 trap - EXIT
 exit 0
