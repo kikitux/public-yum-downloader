@@ -10,7 +10,7 @@
 #
 # Author    :   Alvaro Miranda
 # Email     :   kikitux@gmail.com
-# Web       :   http://kikitux.blogspot.co.nz
+# Web       :   http://kikitux.net
 # 
 # Based on the lxc-oracle template script from Oracle
 # from Wim Coekaerts and Dwight Engen
@@ -249,7 +249,7 @@ cat <<EOF
 -s|--src                download source rpm
 -l|--local=<path>>      local path to check for rpms (ie. /media/iso)
 
-Release is of the format "major.minor", for example "5.8", "6.3", or "6.latest"
+Release is of the format "major.minor", for example "5.9", "6.4", or "6.latest"
 To download latest UEK kernel, use 6.UEK or 5.UEK
 
 EOF
