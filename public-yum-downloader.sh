@@ -1,5 +1,5 @@
 #!/bin/bash
-# 201303020000
+# 201302250000
 # public-yum-downloader.sh
 #
 # public-yum-downloader script, to download a yum repository
@@ -85,19 +85,11 @@ repo_create()
         else
             die "Unsupported release $container_release_major"
         fi
-        
-        #repofile in tmp will be used to download the packages
-        wget -N -q $public_url/$repofile -O $tmpdir/$repofile
+
+        wget -N -q $public_url/$repofile -O $tmpdir/$repofile    
         if [ $? -ne 0 ]; then
             die "Failed to download repo file $public_url/$repofile"
         fi
-
-        #repofile in container_rootfs will be there for lxc clients
-        wget -N -q $public_url/$repofile -O $container_rootfs/$repofile
-        if [ $? -ne 0 ]; then
-            die "Failed to download repo file $container_rootfs/$repofile
-        fi
-        
         wget -N -q $public_url/$gpgkeyfile -O $container_rootfs/$gpgkeyfile
         if [ $? -ne 0 ]; then
             die "Failed to download gpg-key file $public_url/$gpgkeyfile"
