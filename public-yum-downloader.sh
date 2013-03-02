@@ -1,5 +1,5 @@
 #!/bin/bash
-# 201302250000
+# 201303020000
 # public-yum-downloader.sh
 #
 # public-yum-downloader script, to download a yum repository
@@ -86,7 +86,14 @@ repo_create()
             die "Unsupported release $container_release_major"
         fi
 
+        # to download from public-yum, we will modify this a bit
         wget -N -q $public_url/$repofile -O $tmpdir/$repofile    
+        if [ $? -ne 0 ]; then
+            die "Failed to download repo file $public_url/$repofile"
+        fi
+        
+        # for lxc guests
+        wget -N -q $public_url/$repofile -O $container_rootfs/$repofile    
         if [ $? -ne 0 ]; then
             die "Failed to download repo file $public_url/$repofile"
         fi
