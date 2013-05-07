@@ -1,5 +1,5 @@
 #!/bin/bash
-# 201303020000
+# 201305070000
 # public-yum-downloader.sh
 #
 # public-yum-downloader script, to download a yum repository
@@ -233,7 +233,31 @@ repo_create()
     #run createrepo
     repodatacache="$container_rootfs/$basepath/repodata/.cache"
     mkdir -p "$repodatacache"
-    createrepo --update --cache "$repodatacache" "$container_rootfs/$basepath"
+    if [ -f /etc/oracle-release -o -f /etc/redhat-release ] ; then
+        host_release_version=`lsb_release --release |awk '{print $2}'`
+        host_release_major=`echo $host_release_version |awk -F '.' '{print $1}'`
+        host_release_minor=`echo $host_release_version |awk -F '.' '{print $2}'`
+        if [ $host_release_major = 6 ] ; then
+            createrepo --checksum sha --cache "$repodatacache" "$container_rootfs/$basepath"
+        else
+            createrepo --update --cache "$repodatacache" "$container_rootfs/$basepath"
+        fi
+    fi
+    echo "Downloading updateinfo.xml"
+    wget -P "$container_rootfs/$basepath/repodata" "$public_url/$basepath/repodata/updateinfo.xml.gz"
+    if [ $? = 0 ] ; then
+        echo "updateinfo.xml downloaded"
+        echo "updating repomd.xml with updateinfo.xml"
+        if [ -f "$tmpdir/repomd.xml" ] ; then
+            \rm "$tmpdir/repomd.xml"
+        fi
+        wget -P "$tmpdir" "$public_url/$basepath/repodata/repomd.xml"
+        sed -i '$d' "$container_rootfs/$basepath/repodata/repomd.xml"
+        grep -A5 '<data type="updateinfo">' "$tmpdir/repomd.xml" >> "$container_rootfs/$basepath/repodata/repomd.xml"
+        echo '</repomd>' >> "$container_rootfs/$basepath/repodata/repomd.xml"
+    else
+        echo "no updateinfo.xml available"
+    fi
     if [ -n "$repourl" ]; then
         echo "enabling $repo on $localrepofile"
         sed -i "/\[$repo\]/,/\[/ s/enabled=0/enabled=1/" $container_rootfs/$localrepofile
