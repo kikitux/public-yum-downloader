@@ -1,5 +1,5 @@
 #!/bin/bash
-# 201305070000
+# 201305080000
 # public-yum-downloader.sh
 #
 # public-yum-downloader script, to download a yum repository
@@ -238,23 +238,28 @@ repo_create()
         host_release_major=`echo $host_release_version |awk -F '.' '{print $1}'`
         host_release_minor=`echo $host_release_version |awk -F '.' '{print $2}'`
         if [ $host_release_major = 6 ] ; then
-            createrepo --checksum sha --cache "$repodatacache" "$container_rootfs/$basepath"
+            createrepo --checksum sha --simple-md-filenames --cache "$repodatacache" "$container_rootfs/$basepath"
+            if [ $? -ne 0 ]; then
+                die "Please update to the latest createrepo and yum, yum-utils rpm"
+            fi
         else
             createrepo --update --cache "$repodatacache" "$container_rootfs/$basepath"
         fi
     fi
     echo "Downloading updateinfo.xml"
-    wget -P "$container_rootfs/$basepath/repodata" "$public_url/$basepath/repodata/updateinfo.xml.gz"
+    wget -N -q "$public_url/$basepath/repodata/updateinfo.xml.gz" -O "$container_rootfs/$basepath/repodata/updateinfo.xml.gz"
     if [ $? = 0 ] ; then
         echo "updateinfo.xml downloaded"
         echo "updating repomd.xml with updateinfo.xml"
-        if [ -f "$tmpdir/repomd.xml" ] ; then
-            \rm "$tmpdir/repomd.xml"
+        gunzip -f "$container_rootfs/$basepath/repodata/updateinfo.xml.gz"
+        if [ $host_release_major = 6 ] ; then
+            modifyrepo --checksum sha --simple-md-filenames "$container_rootfs/$basepath/repodata/updateinfo.xml" "$container_rootfs/$basepath/repodata"
+            if [ $? -ne 0 ] ; then
+               die "please upgrade createrepo rpm"
+            fi
+        else
+            modifyrepo "$container_rootfs/$basepath/repodata/updateinfo.xml" "$container_rootfs/$basepath/repodata"
         fi
-        wget -P "$tmpdir" "$public_url/$basepath/repodata/repomd.xml"
-        sed -i '$d' "$container_rootfs/$basepath/repodata/repomd.xml"
-        grep -A5 '<data type="updateinfo">' "$tmpdir/repomd.xml" >> "$container_rootfs/$basepath/repodata/repomd.xml"
-        echo '</repomd>' >> "$container_rootfs/$basepath/repodata/repomd.xml"
     else
         echo "no updateinfo.xml available"
     fi
