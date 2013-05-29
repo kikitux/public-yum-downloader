@@ -1,5 +1,5 @@
 #!/bin/bash
-# 201305080000
+# 201305300000
 # public-yum-downloader.sh
 #
 # public-yum-downloader script, to download a yum repository
@@ -43,7 +43,7 @@ cleanup() {
 
 repo_create()
 {
-    cmds="rpm wget yum yumdownloader createrepo"
+    cmds="rpm wget yum yumdownloader createrepo lsb_release"
 
     for cmd in $cmds; do
         which $cmd >/dev/null 2>&1
