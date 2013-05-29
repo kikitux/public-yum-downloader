@@ -5,6 +5,11 @@ Script to download a local copy of public-yum.oracle.com for a given repo.
 
 It have been updated to include the updateinfo xml for Security errata, bug fixes, CVE, etc.
 
+Updates:
+==
+
+The script now download updateinfo.xml from public-yum, that enable the local repo to have the errata/security information.
+
 
 Short version:
 ==
@@ -20,6 +25,14 @@ proxy is http://proxy:3128
 public-yum-downloader.sh -P /var/www/html -p http://proxy:3128 -R 6.latest -a x86_64 --url http://mirandaa00
 
 At the end of the run, will create a package /var/ww/html/local-yum-ol6.repo available as http://mirandaa00/local-yum-ol6.repo
+
+if you want to 
+only the minimal packages for an LXC container
+version 6.4
+DocumentRoot for the webserver is /var/www/html
+proxy is http://proxy:3128
+
+public-yum-downloader.sh -P /var/www/html -p http://proxy:3128 -R 6.4 -a x86_64
 
 
 if you want to 
