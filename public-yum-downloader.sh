@@ -233,17 +233,29 @@ repo_create()
     #run createrepo
     repodatacache="$container_rootfs/$basepath/repodata/.cache"
     mkdir -p "$repodatacache"
+    echo "Downloading comps.xml"
+    wget -N -q "$public_url/$basepath/repodata/comps.xml" -O "$container_rootfs/$basepath/repodata/comps.xml"
+    if [ $? = 0 ] ; then
+        echo "comps.xml downloaded"
+    else
+        echo "no comps.xml available"
+    fi
+    if [ -f "$container_rootfs/$basepath/repodata/comps.xml" ] ; then
+       CREATEREPO="createrepo -g $container_rootfs/$basepath/repodata/comps.xml"
+    else
+       CREATEREPO="createrepo"
+    fi
     if [ -f /etc/oracle-release -o -f /etc/redhat-release ] ; then
         host_release_version=`lsb_release --release |awk '{print $2}'`
         host_release_major=`echo $host_release_version |awk -F '.' '{print $1}'`
         host_release_minor=`echo $host_release_version |awk -F '.' '{print $2}'`
         if [ $host_release_major = 6 ] ; then
-            createrepo --checksum sha --simple-md-filenames --cache "$repodatacache" "$container_rootfs/$basepath"
+            $CREATEREPO --checksum sha --simple-md-filenames --cache "$repodatacache" "$container_rootfs/$basepath"
             if [ $? -ne 0 ]; then
                 die "Please update to the latest createrepo and yum, yum-utils rpm"
             fi
         else
-            createrepo --update --cache "$repodatacache" "$container_rootfs/$basepath"
+            $CREATEREPO --update --cache "$repodatacache" "$container_rootfs/$basepath"
         fi
     fi
     echo "Downloading updateinfo.xml"
