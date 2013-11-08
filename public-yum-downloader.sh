@@ -1,5 +1,5 @@
 #!/bin/bash
-# 201305300000
+# 201311090000
 # public-yum-downloader.sh
 #
 # public-yum-downloader script, to download a yum repository
@@ -257,6 +257,10 @@ repo_create()
         else
             $CREATEREPO --update --cache "$repodatacache" "$container_rootfs/$basepath"
         fi
+    else
+        echo "no oracle/redhat"
+        host_release_major=5
+        $CREATEREPO --update --cache "$repodatacache" "$container_rootfs/$basepath"
     fi
     echo "Downloading updateinfo.xml"
     wget -N -q "$public_url/$basepath/repodata/updateinfo.xml.gz" -O "$container_rootfs/$basepath/repodata/updateinfo.xml.gz"
