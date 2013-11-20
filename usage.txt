@@ -1,4 +1,5 @@
 public-yum-downloader.sh -h
+
 -h|--help               this screen
 -a|--arch=<arch>        architecture (ie. i386 or x86_64)
 -R|--release=<release>  release to download
@@ -10,5 +11,5 @@ public-yum-downloader.sh -h
 -s|--src                download source rpm
 -l|--local=<path>>      local path to check for rpms (ie. /media/iso)
 
-Release is of the format "major.minor", for example "5.8", "6.3", or "6.latest"
+Release is of the format "major.minor", for example "5.8", "6.4", or "6.latest"
 To download latest UEK kernel, use 6.UEK or 5.UEK
