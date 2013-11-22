@@ -188,7 +188,7 @@ repo_create()
         fi
         
         echo generating list for $basearch
-        yumdownloader_cmd="yumdownloader -v --url --disablerepo=* --enablerepo=$repobasearch --resolve --installroot=$tmpinstallroot --archlist=i386,i486,i586,i686,$basearch -c $tmpdir/$repofile --destdir=$container_rootfs/$basepath"
+        yumdownloader_cmd="yumdownloader -v --url --disableplugin='*' --disablerepo='*' --enablerepo=$repobasearch --resolve --installroot=$tmpinstallroot --archlist=i386,i486,i586,i686,$basearch -c $tmpdir/$repofile --destdir=$container_rootfs/$basepath"
  
          #yumdownloader get some ERROR 416 and fail to download, so we will generate a list
          #and will use wget to handle the download
