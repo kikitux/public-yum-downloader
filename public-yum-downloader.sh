@@ -197,7 +197,7 @@ repo_create()
         if [ "$min" = "y" ] && [[ $repo = *[0-9a]_base || $repo = *[0-9]_latest ]]; then
             echo "Will download the minimum packages for LXC host"
             pkgs="yum initscripts passwd rsyslog vim-minimal openssh-server dhclient chkconfig rootfiles policycoreutils oraclelinux-release"
-            $yumdownloader_cmd $pkgs > $downloadlist.log
+            $yumdownloader_cmd --resolve $pkgs > $downloadlist.log
         else
             $yumdownloader_cmd '*' > $downloadlist.log
         fi
