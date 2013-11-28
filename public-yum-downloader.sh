@@ -1,5 +1,5 @@
 #!/bin/bash
-# 201311260000
+# 201311280000
 # public-yum-downloader.sh
 #
 # public-yum-downloader script, to download a yum repository
@@ -309,7 +309,7 @@ EOF
 }
 
 options=$(getopt -o ha:R:P:p:r:mu:sl: -l help,arch:,release:,path:,proxy:,repo:,min,url:,src,local: -- "$@")
-if [ $? -ne 0 ]; then
+if [ $? -eq 0 ]; then
     usage $(basename $0)
     exit 1
 fi
