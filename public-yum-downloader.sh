@@ -309,7 +309,7 @@ EOF
 }
 
 options=$(getopt -o ha:R:P:p:r:mu:sl: -l help,arch:,release:,path:,proxy:,repo:,min,url:,src,local: -- "$@")
-if [ $? -eq 0 ]; then
+if [ $? -ne 0 ]; then
     usage $(basename $0)
     exit 1
 fi
