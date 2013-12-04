@@ -180,7 +180,7 @@ repo_create()
         repobasearch=$repo\_$basearch
         sed -i "s/\[$repo\]/\[$repobasearch\]/" $tmpdir/$repofile
         
-        tmpinstallroot="$tmpdir/$basearch"
+        tmpinstallroot="$tmpdir/$repobasearch"
         
         if [ "$src" = "y" ];then
             basearch="$basearch,src --source"
