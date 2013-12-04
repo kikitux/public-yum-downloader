@@ -1,5 +1,5 @@
 #!/bin/bash
-# 201311280000
+# 201312040000
 # public-yum-downloader.sh
 #
 # public-yum-downloader script, to download a yum repository
@@ -190,6 +190,13 @@ repo_create()
         echo generating list for $basearch
         yumdownloader_cmd="yumdownloader -v --url --disableplugin='*' --disablerepo='*' --enablerepo=$repobasearch --installroot=$tmpinstallroot --archlist=i386,i486,i586,i686,$basearch -c $tmpdir/$repofile --destdir=$container_rootfs/$basepath"
  
+        if [[ $repo =~ addons ]]; then
+             echo "addons channel, no resolve for yumdownloader"
+        else
+             yumdownloader_cmd="$yumdownloader_cmd --resolve"
+        fi
+
+ 
          #yumdownloader get some ERROR 416 and fail to download, so we will generate a list
          #and will use wget to handle the download
          downloadlist="$tmpdir/list"
@@ -197,7 +204,7 @@ repo_create()
         if [ "$min" = "y" ] && [[ $repo = *[0-9a]_base || $repo = *[0-9]_latest ]]; then
             echo "Will download the minimum packages for LXC host"
             pkgs="yum initscripts passwd rsyslog vim-minimal openssh-server dhclient chkconfig rootfiles policycoreutils oraclelinux-release"
-            $yumdownloader_cmd --resolve $pkgs > $downloadlist.log
+            $yumdownloader_cmd $pkgs > $downloadlist.log
         else
             $yumdownloader_cmd '*' > $downloadlist.log
         fi
