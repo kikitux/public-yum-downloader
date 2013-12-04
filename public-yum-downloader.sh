@@ -188,7 +188,7 @@ repo_create()
         fi
         
         echo generating list for $basearch
-        yumdownloader_cmd="yumdownloader -v --url --disableplugin='*' --disablerepo='*' --enablerepo=$repobasearch --installroot=$tmpinstallroot --archlist=i386,i486,i586,i686,$basearch -c $tmpdir/$repofile --destdir=$container_rootfs/$basepath"
+        yumdownloader_cmd="yumdownloader -v --url --disableplugin='*' --disablerepo='*' --enablerepo=$repobasearch --installroot=$tmpinstallroot --archlist=noarch,i386,i486,i586,i686,$basearch -c $tmpdir/$repofile --destdir=$container_rootfs/$basepath"
  
         if [[ $repo =~ addons ]]; then
              echo "addons channel, no resolve for yumdownloader"
