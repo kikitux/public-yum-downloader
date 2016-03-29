@@ -1,5 +1,5 @@
 #!/bin/bash
-# 201312040000
+# 201410031900
 # public-yum-downloader.sh
 #
 # public-yum-downloader script, to download a yum repository
@@ -82,6 +82,10 @@ repo_create()
             repofile=public-yum-ol6.repo
             localrepofile=local-yum-ol6.repo
             gpgkeyfile=RPM-GPG-KEY-oracle-ol6
+        elif [ $container_release_major = "7" ]; then
+            repofile=public-yum-ol7.repo
+            localrepofile=local-yum-ol7.repo
+            gpgkeyfile=RPM-GPG-KEY-oracle-ol7
         else
             die "Unsupported release $container_release_major"
         fi
@@ -104,6 +108,12 @@ repo_create()
 
         if [ $manualrepo ]; then
             repo="$manualrepo"
+        elif [ $container_release_minor = "UEKR3" ]; then
+            if [ $container_release_major = "7"  ]; then
+                repo="ol"$container_release_major"_"$container_release_minor"_latest"
+            else
+                repo="ol"$container_release_major"_"$container_release_minor"_latest"
+            fi
         elif [ $container_release_minor = "UEK" ]; then
             if [ $container_release_major = "6" -o $container_release_major = "5"  ]; then
                 repo="ol"$container_release_major"_"$container_release_minor"_latest"
@@ -116,6 +126,8 @@ repo_create()
             else
                 repo="ol"$container_release_major"_"$container_release_minor
             fi
+        elif [ $container_release_major = "7" ]; then
+                repo="ol"$container_release_major"_u"$container_release_minor"_base"
         elif [ $container_release_major = "6" ]; then
             if   [ $container_release_minor = "0" ]; then
                 repo="ol"$container_release_major"_ga_base"

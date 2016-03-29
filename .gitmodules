@@ -1,0 +1,15 @@
+[submodule "yum"]
+	path = src/yum
+	url = git://yum.baseurl.org/yum.git
+[submodule "yum-utils"]
+	path = src/yum-utils
+	url = git://yum.baseurl.org/yum-utils.git
+[submodule "yum-metadata-parser"]
+	path = src/yum-metadata-parser
+	url = git://yum.baseurl.org/yum-metadata-parser.git
+[submodule "yum-updatesd"]
+	path = src/yum-updatesd
+	url = git://yum.baseurl.org/yum-updatesd.git
+[submodule "yum-docs"]
+	path = src/yum-docs
+	url = git://yum.baseurl.org/yum-docs.git
