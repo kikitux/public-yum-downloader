@@ -1,5 +1,5 @@
 #!/bin/bash
-# 201410031900
+# 201612100000
 # public-yum-downloader.sh
 #
 # public-yum-downloader script, to download a yum repository
@@ -168,8 +168,8 @@ repo_create()
                 \rm $tmpdir/$localrepofile.old
             fi
             echo "set $repourl in $localrepofile"
-            sed -i "s|baseurl=http://public-yum.oracle.com/repo|baseurl=$repourl/repo|" $container_rootfs/$localrepofile
-            sed -i "s|gpgkey=http://public-yum.oracle.com|gpgkey=$repourl|" $container_rootfs/$localrepofile
+            sed -i "s|baseurl=http://yum.oracle.com/repo|baseurl=$repourl/repo|" $container_rootfs/$localrepofile
+            sed -i "s|gpgkey=http://yum.oracle.com|gpgkey=$repourl|" $container_rootfs/$localrepofile
             echo "file $container_rootfs/$localrepofile created"
             echo "use $repourl/$localrepofile for remote clients"
         else
@@ -178,7 +178,13 @@ repo_create()
 
         echo repo to download is $repo
 
-        basepath=$(sed -n -e "s/\$basearch/$basearch/" -e "/\[$repo\]/,/\[/ s/baseurl=http:\/\/public-yum.oracle.com//p" $tmpdir/$repofile)
+        basepath=$(sed -n -e "s/\$basearch/$basearch/" -e "/\[$repo\]/,/\[/ s/baseurl=http:\/\/yum.oracle.com//p" $tmpdir/$repofile)
+        if [ ! "${basepath}" ]; then
+          echo "basepath var empty, this happen once when oracle did rename public-yum to yum"
+          echo "exitting since we can't grab the path"
+          exit 1
+        fi
+
         mkdir -p $container_rootfs/$basepath
 
         #set arch on public-yum repo file.
@@ -193,6 +199,9 @@ repo_create()
         sed -i "s/\[$repo\]/\[$repobasearch\]/" $tmpdir/$repofile
         
         tmpinstallroot="$tmpdir/$repobasearch"
+        #move repo file to chroot
+        mkdir -p $tmpinstallroot/etc/yum.repos.d
+        mv $tmpdir/$repofile $tmpinstallroot/etc/yum.repos.d
         
         if [ "$src" = "y" ];then
             basearch="$basearch,src --source"
@@ -200,14 +209,13 @@ repo_create()
         fi
         
         echo generating list for $basearch
-        yumdownloader_cmd="yumdownloader -v --url --disableplugin='*' --disablerepo='*' --enablerepo=$repobasearch --installroot=$tmpinstallroot --archlist=noarch,i386,i486,i586,i686,$basearch -c $tmpdir/$repofile --destdir=$container_rootfs/$basepath"
- 
+        yumdownloader_cmd="yumdownloader -v --url --disableplugin='*' --disablerepo='*' --enablerepo=$repobasearch --installroot=$tmpinstallroot --archlist=noarch,i386,i486,i586,i686,$basearch --destdir=$container_rootfs/$basepath"
+
         if [[ $repo =~ addons ]]; then
              echo "addons channel, no resolve for yumdownloader"
         else
              yumdownloader_cmd="$yumdownloader_cmd --resolve"
         fi
-
  
          #yumdownloader get some ERROR 416 and fail to download, so we will generate a list
          #and will use wget to handle the download
@@ -239,6 +247,7 @@ repo_create()
                 find $local -name $rpm -exec cp -v -n {} "$container_rootfs/$basepath" \;
                 if [ ! -f "$container_rootfs/$basepath/$rpm" ] ; then
                     echo "$rpm not found, downloading.."
+                    echo wget -nc -P "$container_rootfs/$basepath" $line
                     wget -nc -P "$container_rootfs/$basepath" $line
                 fi 
         done < $downloadlist
