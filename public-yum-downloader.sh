@@ -178,7 +178,7 @@ repo_create()
 
         echo repo to download is $repo
 
-        basepath=$(sed -n -e "s/\$basearch/$basearch/" -e "/\[$repo\]/,/\[/ s/baseurl=http:\/\/yum.oracle.com//p" $tmpdir/$repofile)
+        basepath=$(sed -n -e "s/\$basearch/$basearch/" -e "/\[$repo\]/,/\[/ s/baseurl=http.:\/\/yum.oracle.com//p" $tmpdir/$repofile)
         if [ ! "${basepath}" ]; then
           echo "basepath var empty, this happen once when oracle did rename public-yum to yum"
           echo "exitting since we can't grab the path"
